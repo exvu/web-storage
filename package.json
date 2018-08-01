@@ -1,14 +1,36 @@
 {
   "name": "@exvu/web-storage",
   "packageName": "web-storage",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "exvu web-storage",
-  "main": "index.js",
+  "main": "src/index.js",
+  "keywords": [
+    "web",
+    "localstorage",
+    "sessionstorage",
+    "local",
+    "session",
+    "localStorage",
+    "sessionStorage",
+    "html5",
+    "expires",
+    "加密",
+    "encryption"
+  ],
   "scripts": {
     "build:dist": "webpack",
-    "build:src": "tsc"
+    "build:src": "tsc --target es5"
   },
-  "author": "",
+  "homepage": "https://github.com/exvu/web-storage#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exvu/web-storage.git"
+  },
+  "author":{
+    "name":"exvu",
+    "email":"923100406@qq.com"
+  },
+  "types": "@type/index.d.ts",
   "license": "ISC",
   "devDependencies": {
     "babel": "^6.23.0",

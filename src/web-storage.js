@@ -7,13 +7,14 @@ var __assign = (this && this.__assign) || Object.assign || function(t) {
     }
     return t;
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var common_1 = require("./common");
 var WebStorage = /** @class */ (function () {
     function WebStorage(options) {
         if (options === void 0) { options = {
             encrypt: ['value'],
-            pre: '_webstorage_'
+            pre: '_webstorage_',
+            exp: 24 * 60 * 60
         }; }
         this.options = options;
         this.local = new WStorage(localStorage, options);
@@ -24,12 +25,17 @@ var WebStorage = /** @class */ (function () {
     };
     return WebStorage;
 }());
-exports["default"] = WebStorage;
+exports.default = WebStorage;
 var WStorage = /** @class */ (function () {
     function WStorage(storage, options) {
         this.storage = storage;
         this.options = options;
     }
+    /**
+     * 编码key
+     * @param key
+     * @param options
+     */
     WStorage.prototype.compileKey = function (key, options) {
         key = common_1.normalizeName(options.pre + key);
         if (options.encrypt && options.encrypt.indexOf('key') !== -1) {
@@ -37,6 +43,11 @@ var WStorage = /** @class */ (function () {
         }
         return key;
     };
+    /**
+     * 编码值
+     * @param value
+     * @param options
+     */
     WStorage.prototype.compileValue = function (value, options) {
         value = JSON.stringify(value);
         if (options.encrypt && options.encrypt.indexOf('value') !== -1) {
@@ -44,6 +55,11 @@ var WStorage = /** @class */ (function () {
         }
         return value;
     };
+    /**
+     * 解码值
+     * @param value
+     * @param options
+     */
     WStorage.prototype.uncompileValue = function (value, options) {
         if (options.encrypt && options.encrypt.indexOf('value') !== -1) {
             value = common_1.uncompileStr(value);
@@ -70,13 +86,37 @@ var WStorage = /** @class */ (function () {
         var currentDate = new Date();
         var data = {
             c: currentDate.getTime(),
-            e: (new Date(currentDate.getTime() + 24 * 60 * 60 * 1000)).getTime(),
-            v: this.compileValue(value, options)
+            e: options.exp ? (new Date(currentDate.getTime() + options.exp * 1000)).getTime() : Infinity,
+            v: this.compileValue(value, options),
         };
         this.storage.setItem(key, JSON.stringify(data));
         return _a = {},
             _a[key] = data,
             _a;
+    };
+    WStorage.prototype.exp = function (key, expTime, options) {
+        if (options === void 0) { options = {}; }
+        options = __assign({}, this.options, options);
+        //生成key
+        key = this.compileKey(key, options);
+        var payload = this.storage.getItem(key);
+        if (payload === null) {
+            return false;
+        }
+        try {
+            var _a = JSON.parse(payload), c = _a.c, e = _a.e, v = _a.v;
+            var currentDate = new Date();
+            e = new Date(currentDate.getTime() + expTime).getTime();
+            this.storage.setItem(key, JSON.stringify({
+                c: c,
+                e: e,
+                v: v
+            }));
+            return true;
+        }
+        catch (e) {
+            return false;
+        }
     };
     /**
      * 获取指定的缓存
@@ -92,13 +132,18 @@ var WStorage = /** @class */ (function () {
             this.remove(key);
             return null;
         }
-        var _a = JSON.parse(payload), c = _a.c, e = _a.e, v = _a.v;
-        if ((new Date()).getTime() > e) {
-            this.remove(key);
+        try {
+            var _a = JSON.parse(payload), c = _a.c, e = _a.e, v = _a.v;
+            if (e && (new Date()).getTime() > e) {
+                this.remove(key);
+                return null;
+            }
+            v = this.uncompileValue(v, options);
+            return v;
+        }
+        catch (e) {
             return null;
         }
-        v = this.uncompileValue(v, options);
-        return v;
     };
     /**
      * 判断是否存在指定缓存
@@ -145,10 +190,13 @@ var WStorage = /** @class */ (function () {
         var _this = this;
         if (force === void 0) { force = false; }
         var names = Object.getOwnPropertyNames(this.storage);
-        var list = {};
         names.forEach(function (name) {
-            name = name.replace(_this.options.pre || '', '');
-            list[name] = _this.remove(name);
+            if (force) {
+                _this.storage.removeItem(name);
+            }
+            else {
+                _this.remove(name, { pre: '' });
+            }
         });
     };
     /**
@@ -158,13 +206,12 @@ var WStorage = /** @class */ (function () {
         var _this = this;
         var names = Object.getOwnPropertyNames(this.storage);
         names.forEach(function (key) {
-            key = key.replace(_this.options.pre || '', '');
             var payload = _this.storage.getItem(key);
             try {
                 if (payload !== null) {
                     var _a = JSON.parse(payload), c = _a.c, e = _a.e, v = _a.v;
-                    if ((new Date()).getTime() > e) {
-                        _this.remove(key);
+                    if (e && (new Date()).getTime() > e) {
+                        _this.remove(key, { pre: '' });
                     }
                 }
             }

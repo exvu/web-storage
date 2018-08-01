@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 function getType(obj) {
     var typeStr = Object.prototype.toString.call(obj);
     var _a = typeStr.match(/^\[object\s+(\S+)\]$/), _b = _a[1], type = _b === void 0 ? 'object' : _b;
