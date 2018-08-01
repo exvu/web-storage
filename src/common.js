@@ -1,12 +1,12 @@
-
-
-export function getType(obj: any) {
-    let typeStr = Object.prototype.toString.call(obj);
-    let [, type = 'object'] = typeStr.match(/^\[object\s+(\S+)\]$/);
+"use strict";
+exports.__esModule = true;
+function getType(obj) {
+    var typeStr = Object.prototype.toString.call(obj);
+    var _a = typeStr.match(/^\[object\s+(\S+)\]$/), _b = _a[1], type = _b === void 0 ? 'object' : _b;
     return type.toLocaleLowerCase();
 }
-
-export function convenrsionType(value: any, type: string) {
+exports.getType = getType;
+function convenrsionType(value, type) {
     switch (type) {
         case 'string':
             return String(value);
@@ -21,23 +21,26 @@ export function convenrsionType(value: any, type: string) {
             return JSON.parse(value);
     }
 }
-export function normalizeName(name: string) {
+exports.convenrsionType = convenrsionType;
+function normalizeName(name) {
     if (typeof name !== 'string') {
-        name = String(name)
+        name = String(name);
     }
     if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
-        throw new TypeError('Invalid character in header field name')
+        throw new TypeError('Invalid character in header field name');
     }
-    return name.toLowerCase()
+    return name.toLowerCase();
 }
-export function compileStr(code: string) { //对字符串进行加密       
+exports.normalizeName = normalizeName;
+function compileStr(code) {
     var c = String.fromCharCode(code.charCodeAt(0) + code.length);
     for (var i = 1; i < code.length; i++) {
         c += String.fromCharCode(code.charCodeAt(i) + code.charCodeAt(i - 1));
     }
     return escape(c);
 }
-export function uncompileStr(code: string) {
+exports.compileStr = compileStr;
+function uncompileStr(code) {
     code = unescape(code);
     var c = String.fromCharCode(code.charCodeAt(0) - code.length);
     for (var i = 1; i < code.length; i++) {
@@ -45,3 +48,4 @@ export function uncompileStr(code: string) {
     }
     return c;
 }
+exports.uncompileStr = uncompileStr;

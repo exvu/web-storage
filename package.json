@@ -1,7 +1,7 @@
 {
   "name": "@exvu/web-storage",
   "packageName": "web-storage",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "exvu web-storage",
   "main": "index.js",
   "scripts": {
