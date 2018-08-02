@@ -25,9 +25,6 @@ export function normalizeName(name: string) {
     if (typeof name !== 'string') {
         name = String(name)
     }
-    if (/[^a-z0-9\-#$%&'*+.\^_`|~]/i.test(name)) {
-        throw new TypeError('Invalid character in header field name')
-    }
     return name.toLowerCase()
 }
 export function compileStr(code: string) { //对字符串进行加密       
