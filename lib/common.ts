@@ -32,10 +32,13 @@ export function compileStr(code: string) { //对字符串进行加密
     for (var i = 1; i < code.length; i++) {
         c += String.fromCharCode(code.charCodeAt(i) + code.charCodeAt(i - 1));
     }
-    return escape(c);
+    return escape(c) + '_c';
+}
+export function isComplile(code: string) {
+    return (code || '').indexOf('_c');
 }
 export function uncompileStr(code: string) {
-    code = unescape(code);
+    code = unescape(code.substring(0, code.length - 2));
     var c = String.fromCharCode(code.charCodeAt(0) - code.length);
     for (var i = 1; i < code.length; i++) {
         c += String.fromCharCode(code.charCodeAt(i) - c.charCodeAt(i - 1));

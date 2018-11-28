@@ -18,6 +18,8 @@
     "encryption"
   ],
   "scripts": {
+    "test:ts": "ts-node ./lib/test",
+    "test": "node ./src/test",
     "build:dist": "webpack",
     "build:src": "tsc --target es5"
   },
@@ -26,17 +28,23 @@
     "type": "git",
     "url": "git+https://github.com/exvu/web-storage.git"
   },
-  "author":{
-    "name":"exvu",
-    "email":"923100406@qq.com"
+  "author": {
+    "name": "exvu",
+    "email": "923100406@qq.com"
   },
   "types": "@type/index.d.ts",
   "license": "ISC",
   "devDependencies": {
+    "@types/stringify-object": "^3.2.0",
     "babel": "^6.23.0",
+    "stringify-object": "^3.3.0",
     "ts-loader": "^3.1.1",
-    "typescript": "^2.8.3",
+    "ts-node": "^7.0.1",
+    "typescript": "^2.9.2",
     "uglifyjs-webpack-plugin": "^1.2.7",
     "webpack": "^3.8.1"
+  },
+  "dependencies": {
+    "chalk": "^2.4.1"
   }
 }

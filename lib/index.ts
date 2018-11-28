@@ -1,2 +1,2 @@
-import WebStorage from './web-storage';
+import WebStorage from './webStorage';
 export default WebStorage;

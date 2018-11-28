@@ -1,40 +1,68 @@
-import { getType, convenrsionType, normalizeName, compileStr, uncompileStr } from "./common";
+import { getType, convenrsionType, normalizeName, compileStr, uncompileStr, isComplile } from "./common";
 
-
-interface WebStorageOption {
+export interface Option {
     encrypt?: Array<'key' | 'value'>,//需要的加密字段
     pre?: string,
-    exp?: number
+    exp?: number | null
 }
-export default class WebStorage {
+export interface WebStorageOption extends Option {
+    storage: Storage,
+}
 
-    public local: WStorage;
-    public session: WStorage;
-    constructor(private options: WebStorageOption = {
-        encrypt: ['value'],
-        pre: '_webstorage_',
-        exp: 24 * 60 * 60
-    }) {
-        this.local = new WStorage(localStorage, options);
-        this.session = new WStorage(sessionStorage, options);
+export default class WebStorage {
+    private options: {
+        encrypt: Array<'key' | 'value'>,//需要的加密字段
+        pre: string,
+        exp: number | null
+    };
+    private storage: Storage;
+    constructor({ storage, ..._options }: WebStorageOption) {
+        this.options = {
+            encrypt: ['value'],
+            pre: '_web_',
+            exp: null,
+            ..._options,
+        }
+        this.storage = storage;
     }
+    /**
+    * 判断是否支持storage
+    */
     static isSuppered(): boolean {
         return 'Storage' in window;
     }
-}
-class WStorage {
-    constructor(private storage: Storage, private options: WebStorageOption) {
+    /**
+    * 修改配置
+    */
+    setOptions(values: Option) {
+        this.options = {
+            ...this.options,
+            ...values,
+        };
     }
-
+    /**
+     * 获取配置
+     */
+    getOptions() {
+        return this.options;
+    }
     /**
      * 编码key
      * @param key 
      * @param options 
      */
-    private compileKey(key: string, options: WebStorageOption) {
-        key = normalizeName(options.pre + key);
+    private compileKey(key: string, options: Option) {
         if (options.encrypt && options.encrypt.indexOf('key') !== -1) {
-            key = compileStr(key);
+            key = compileStr(normalizeName(options.pre + key));
+        }
+        return key;
+    }
+    /**
+     * 解码key
+     */
+    private uncompileKey(key: string, options: Option) {
+        if (options.encrypt && options.encrypt.indexOf('key') !== -1) {
+            key = uncompileStr(key);
         }
         return key;
     }
@@ -43,10 +71,9 @@ class WStorage {
      * @param value 
      * @param options 
      */
-    private compileValue(value: any, options: WebStorageOption) {
-        value = JSON.stringify(value);
+    private compileValue(value: any, options: Option) {
         if (options.encrypt && options.encrypt.indexOf('value') !== -1) {
-            value = compileStr(value);
+            value = compileStr(JSON.stringify(value));
         }
         return value;
     }
@@ -55,7 +82,7 @@ class WStorage {
      * @param value 
      * @param options 
      */
-    private uncompileValue(value: any, options: WebStorageOption) {
+    private uncompileValue(value: any, options: Option) {
         if (options.encrypt && options.encrypt.indexOf('value') !== -1) {
             value = uncompileStr(value);
         }
@@ -73,19 +100,17 @@ class WStorage {
      * @param value 
      * @param options 
      */
-    set(key: string, value: any, options: WebStorageOption) {
-
+    set(key: string, value: any, options?: Option) {
         options = {
             ...this.options,
             ...options
         }
-
         //生成key
         key = this.compileKey(key, options);
         let currentDate = new Date();
         let data = {
             c: currentDate.getTime(),
-            e: options.exp ? (new Date(currentDate.getTime() + options.exp * 1000)).getTime() : Infinity,
+            e: options.exp ? (new Date(currentDate.getTime() + options.exp * 1000)).getTime() : null,
             v: this.compileValue(value, options),
         }
         this.storage.setItem(key, JSON.stringify(data));
@@ -93,38 +118,30 @@ class WStorage {
             [key]: data
         }
     }
-    exp(key: string, expTime: number, options: WebStorageOption = {}) {
-        options = {
+    exp(key: string, expTime: number, options: Option = {}) {
+        //生成key
+        key = this.compileKey(key, {
             ...this.options,
             ...options
-        }
-        //生成key
-        key = this.compileKey(key, options);
+        });
         let payload: any = this.storage.getItem(key);
         if (payload === null) {
             return false;
         }
         try {
-            let { c, e, v } = JSON.parse(payload);
+            let data = JSON.parse(payload);
             let currentDate = new Date();
-            e = new Date(currentDate.getTime() + expTime).getTime();
-            this.storage.setItem(key, JSON.stringify({
-                c,
-                e,
-                v
-            }));
-
+            data['e'] = new Date(currentDate.getTime() + expTime).getTime();
+            this.storage.setItem(key, JSON.stringify(data));
             return true;
         } catch (e) {
             return false
         }
-
     }
     /**
      * 获取指定的缓存
-     * @param key 
      */
-    get(key: string, options: WebStorageOption = {}) {
+    get(key: string, options: Option = {}) {
         options = {
             ...this.options,
             ...options
@@ -153,24 +170,48 @@ class WStorage {
      * @param key 
      * @param options 
      */
-    has(key: string, options: WebStorageOption = {}) {
-        options = {
+    has(key: string, options: Option = {}) {
+        //生成key
+        key = this.compileKey(key, {
             ...this.options,
             ...options
+        });
+        if (!(key in this.storage)) {
+            return false;
         }
-        //生成key
-        key = this.compileKey(key, options);
-        return key in this.storage;
+        let payload: any = this.storage.getItem(key);
+        let { c, e, v } = JSON.parse(payload);
+        if (e && (new Date()).getTime() > e) {
+            return false;
+        }
+        return true;
     }
     /**
      * 获取缓存的所有数据
      */
-    getAll(pre: string = '') {
+    getAll(pre?: string) {
         let names = Object.getOwnPropertyNames(this.storage);
         let list: { [index: string]: any } = {};
+        let _pre = '';
         names.forEach(name => {
-            name = name.replace(this.options.pre || '', '');
-            list[name] = this.get(name);
+            let _name = isComplile(name) ? this.uncompileKey(name, this.options) : name;
+            if (pre == '*') {
+                list[_name] = this.get(name, {
+                    encrypt: isComplile(name) ? [] : ['key'],
+                    pre: '',
+                });
+                return;
+            }
+            _pre = pre ? pre : this.options.pre;
+
+            if (_name.indexOf(_pre) == 0) {
+                list[_name] = this.get(_name, {
+                    encrypt: isComplile(name) ? ['key'] : [],
+                    pre: _pre,
+                });
+                return;
+            }
+
         })
         return list;
     }
@@ -178,26 +219,30 @@ class WStorage {
      * 移除指定的缓存
      * @param key 
      */
-    remove(key: string, options: WebStorageOption = {}) {
-        options = {
+    remove(key: string, options: Option = {}) {
+
+        //生成key
+        key = this.compileKey(key, {
             ...this.options,
             ...options
-        }
-        //生成key
-        key = this.compileKey(key, options);
+        });
         this.storage.removeItem(key);
     }
     /**
      * 清除缓存
      * @param force bool 是否清除所有的缓存,默认只清除 WebStorage创建的缓存
      */
-    clear(force: boolean = false) {
+    clear(all: boolean = false) {
         let names = Object.getOwnPropertyNames(this.storage);
         names.forEach(name => {
-            if (force) {
+            if (all) {
                 this.storage.removeItem(name);
             } else {
-                this.remove(name, { pre: '' });
+                let _name = isComplile(name) ? this.uncompileKey(name, this.options) : name;
+                this.remove(_name, {
+                    ...this.options,
+                    pre: '',
+                });
             }
         })
     }
@@ -212,7 +257,7 @@ class WStorage {
                 if (payload !== null) {
                     let { c, e, v } = JSON.parse(payload);
                     if (e && (new Date()).getTime() > e) {
-                        this.remove(key, { pre: '' });
+                        this.storage.removeItem(key);
                     }
                 }
             } catch (e) {

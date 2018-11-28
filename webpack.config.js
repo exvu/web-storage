@@ -7,7 +7,7 @@ module.exports = {
     entry: path.join(__dirname, '/lib/index.ts'),
     output: {
         path: path.join(__dirname, '/dist/'),
-        filename: `${packageName}-${version}.js`,
+        filename: `${packageName}.js`,
         library: "WebStorage",
         libraryTarget: 'window',
         umdNamedDefine: true,
