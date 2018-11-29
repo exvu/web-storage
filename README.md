@@ -6,129 +6,16 @@ web-storage是一款web端的缓存工具,基于html5的storage进行扩展.
 3. 设置key前缀,可以为key字段设置一个前缀
 4. 支持存放string以外的数据类型.传统的storage只能存放string
 
-### 使用前应检查是否浏览器支持storage
-```
-WebStorage.isSuppered();
-```
-用法
+日志
+=======  
+[了解最新改进][changelog]  
+
+快速开始
 =======
-用法请参照例子文件夹下  
-## `web-storage`两种使用方法
-1. 页面引入js文件
-2. npm配置使用
 
-## `web-storage`配置使用
-用于创建一个web-storage请求实例
-```
-new WebStorage([options])
-```
-<h2 align="center">WebStorage 实例</h2>  
-
-|proptype|Description|
-|:-:|:--------:|
-|**`set(key:string,value:any,options:Options)`**| 保存数据|
-|**`get(key:string,options:Options)`**| 获取数据|
-|**`has(key:string,options:Options)`**| 判断key是否存在|
-|**`getAll(pre:string)`**| 获取所有的由工具产生的缓存数据|
-|**`remove(key:string,options:Options)`**| 删除数据|
-|**`clear(force:boolean)`**| 清除所有由工具产生的缓存,`force=true`会清除所有的缓存|
-|**`clearAllExpires()`**| 清除过期的数据|
-|**`local`**| 数据存放到localStorage|
-|**`session`**| 数据存放到sessionStorage|
-
-<h2 align="center">Options</h2>  
-
-|Name|Type|Default|Description|
-|:--:|:--:|:-----:|:--------:|
-|**`encrypt`**|`array`| `['key','value']`| 加密字段|
-|**`pre`**|`string`| `_webstorage_`| key前缀|
-|**`exp`**|`number`| `24*60*60`| 过期时间|
+[快速上手][quickstart].
 
 
-#### 1.页面引入web-storage.js文件
-```html
-<script src="dist/web-storage.0.0.1.js"></script>
-<script>
-// 创建WebStorage实例
-var webStorage = new WebStorage({
-  encrypt:['key','value'],
-  pre:'_wc_',
-  exp:24*60*60
-});
-//保存数据到localstorage
-webStorage.local.set('login', {
-  user:'admin',
-  password:'123456'
-}, {exp : 100});
-//保存数据到sessionStorage
-webStorage.session.set('token', 'eyJpZCI6MSwidHlwZSI6ImFkbWluIn0');
-</script> 
-```
-#### 2.npm配置使用
 
-安装与配置
-==========
-```sh
-$ npm install -g @exvu/web-storage #全局安装
-$ npm install --save-dev @exvu/web-storage #局部安装
-```
-使用
-```javascript
-import WebStorage from '@exvu/web-storage';
-
-let webStorage = new WebStorage({
-  encrypt:['key','value'],
-  pre:'_wc_',
-  exp:24*60*60
-});
-//保存数据到localstorage
-webStorage.local.set('login', {
-  user:'admin',
-  password:'123456'
-}, {exp : 100});
-//保存数据到sessionStorage
-webStorage.session.set('token', 'eyJpZCI6MSwidHlwZSI6ImFkbWluIn0');
-
-```
-
-## 例子
-```javascript
-let webStorage = new WebStorage({
-  encrypt:['key','value'],
-  pre:'_wc_',
-  exp:24*60*60
-});
-/**
- * localstorage 如下 
- */
-//缓存字符串username到localstorage
-webStorage.local.set('username', 'admin');
-
-//获取缓存字符串username
-webStorage.local.get('username');
-
-
-//判断缓存字符串username是否存在
-webStorage.local.has('username');
-
-//删除缓存字符串username
-webStorage.local.remove("username");
-
-//为缓存字符串username设置过期时间为100秒
-webStorage.local.exp('username',100);
-
-//获取所有的缓存字符串 ,以对象的形式返回
-webStorage.local.getAll();
-
-//清除所有的缓存字段(由工具产生的)
-webStorage.local.clear();
-
-//清除所有的缓存字段(storage所有的缓存)
-webStorage.local.clear(true);
-
-//清除所有的过期缓存字段(由工具产生的)
-webStorage.local.clearAllExpires();
-
-
-```
-### sessionStorage 同上
+[changelog]: https://github.com/exvu/web-storage/blob/master/CHANGELOG.md
+[quickstart]: https://github.com/exvu/web-storage/blob/master/doc/DOC.md

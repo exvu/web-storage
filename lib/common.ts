@@ -35,7 +35,7 @@ export function compileStr(code: string) { //对字符串进行加密
     return escape(c) + '_c';
 }
 export function isComplile(code: string) {
-    return (code || '').indexOf('_c');
+    return (code || '').indexOf('_c') == code.length - 2;
 }
 export function uncompileStr(code: string) {
     code = unescape(code.substring(0, code.length - 2));

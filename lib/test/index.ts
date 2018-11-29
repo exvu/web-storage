@@ -42,11 +42,12 @@ async function test() {
     await sleep(1);
     console.log(`c ${storage.has('c') ? '' : '不'}存在`);
     await sleep(1);
-
     //exapmle4 
     log('获取所有数据')
     console.log('storage', format(localStorage));
-    localStorage.setItem('999', 'a');
+    localStorage.setItem('test', 'a');
+    console.log('a 等于', format(storage.get('a')));
+    console.log('c 等于', format(storage.get('c')));
     console.log('工具产生的数据 等于', format(storage.getAll()))
     console.log('所有数据 等于', format(storage.getAll('*')))
 

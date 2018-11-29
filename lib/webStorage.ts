@@ -1,7 +1,7 @@
 import { getType, convenrsionType, normalizeName, compileStr, uncompileStr, isComplile } from "./common";
 
 export interface Option {
-    encrypt?: Array<'key' | 'value'>,//需要的加密字段
+    encrypt?: Array<string>,//需要的加密字段
     pre?: string,
     exp?: number | null
 }
@@ -11,7 +11,7 @@ export interface WebStorageOption extends Option {
 
 export default class WebStorage {
     private options: {
-        encrypt: Array<'key' | 'value'>,//需要的加密字段
+        encrypt: Array<string>,//需要的加密字段
         pre: string,
         exp: number | null
     };
@@ -86,12 +86,7 @@ export default class WebStorage {
         if (options.encrypt && options.encrypt.indexOf('value') !== -1) {
             value = uncompileStr(value);
         }
-        try {
-            value = JSON.parse(value);
-        } catch (e) {
-            return null;
-        }
-        return value;
+        return JSON.parse(value);
     }
 
     /**
@@ -149,20 +144,24 @@ export default class WebStorage {
         //生成key
         key = this.compileKey(key, options);
         let payload = this.storage.getItem(key);
-        if (payload === null) {
-            this.remove(key);
+        if (!payload) {
+            console.log(key, payload);
+            this.remove(key, options);
             return null;
         }
+
         try {
             let { c, e, v } = JSON.parse(payload);
             if (e && (new Date()).getTime() > e) {
-                this.remove(key);
+                this.remove(key, options);
                 return null;
             }
             v = this.uncompileValue(v, options);
+
             return v;
         } catch (e) {
-            return null;
+            console.log(payload);
+            return payload;
         }
     }
     /**
@@ -188,30 +187,27 @@ export default class WebStorage {
     }
     /**
      * 获取缓存的所有数据
+     * 
+     * @param pre
+     * * 获取所有
+     * null 获取工具产生的数据
      */
     getAll(pre?: string) {
         let names = Object.getOwnPropertyNames(this.storage);
         let list: { [index: string]: any } = {};
-        let _pre = '';
         names.forEach(name => {
-            let _name = isComplile(name) ? this.uncompileKey(name, this.options) : name;
+
             if (pre == '*') {
-                list[_name] = this.get(name, {
-                    encrypt: isComplile(name) ? [] : ['key'],
-                    pre: '',
-                });
+                list[name] = this.storage.getItem(name);
                 return;
+            } else {
+                let _name = isComplile(name) ? this.uncompileKey(name, this.options) : name;
+                if (_name.indexOf(this.options.pre) == 0) {
+                    let key = _name.replace(this.options.pre, '');
+                    list[key] = this.get(key, this.options);
+                    return;
+                }
             }
-            _pre = pre ? pre : this.options.pre;
-
-            if (_name.indexOf(_pre) == 0) {
-                list[_name] = this.get(_name, {
-                    encrypt: isComplile(name) ? ['key'] : [],
-                    pre: _pre,
-                });
-                return;
-            }
-
         })
         return list;
     }
