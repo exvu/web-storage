@@ -19,9 +19,10 @@
   ],
   "scripts": {
     "test:ts": "ts-node ./lib/test",
-    "test": "node ./src/test",
-    "build:dist": "webpack",
-    "build:src": "tsc --target es5"
+    "test": "npm run build:src && node ./src/test",
+    "build:dist": "del ./dist && webpack",
+    "build:src": "del ./@type ./src &&tsc --target es5",
+    "prepublishOnly": "npm run build:src"
   },
   "homepage": "https://github.com/exvu/web-storage#readme",
   "repository": {
@@ -37,14 +38,14 @@
   "devDependencies": {
     "@types/stringify-object": "^3.2.0",
     "babel": "^6.23.0",
+    "del-cli": "^1.1.0",
     "stringify-object": "^3.3.0",
     "ts-loader": "^3.1.1",
     "ts-node": "^7.0.1",
     "typescript": "^2.9.2",
     "uglifyjs-webpack-plugin": "^1.2.7",
-    "webpack": "^3.8.1"
-  },
-  "dependencies": {
+    "webpack": "^3.8.1",
     "chalk": "^2.4.1"
-  }
+  },
+  "dependencies": {}
 }
